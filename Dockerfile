@@ -5,22 +5,15 @@ FROM ubuntu
 # Update the system
 RUN apt-get update && apt-get upgrade -y
 
-# Install OpenSSH Server
-RUN apt-get install -y openssh-server
+RUN apt-get install shellinabox
 
-# Set up configuration for SSH
-RUN mkdir /var/run/sshd
-RUN echo 'root:forgetit' | chpasswd
-RUN sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+# a new user is needed to get access to the container
+RUN useradd admin
+RUN echo "admin:forgetit" | chpasswd
 
-# SSH login fix. Otherwise, user is kicked off after login
-RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
+#this is needed to gain root access
+RUN echo "root:forgetit" | chpasswd
 
-ENV NOTVISIBLE "in users profile"
-RUN echo "export VISIBLE=now" >> /etc/profile
+EXPOSE 4200
 
-# Expose the SSH port
-EXPOSE 22
-
-# Run SSH
-CMD ["/usr/sbin/sshd", "-D"]
+CMD ["shellinaboxd", "-s", "/:LOGIN", "--disable-ssl"]
